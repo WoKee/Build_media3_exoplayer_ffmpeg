@@ -19,7 +19,9 @@ on:
         description: "FFMPEG_RELEASE_BRANCH"
         required: true
         default: 'main'
-
+env:
+  GRADLE_OPTS: "-Dorg.gradle.jvmargs=-Xmx4g -Dorg.gradle.daemon=false -Dkotlin.incremental=false"
+  
 jobs:
   okhttp:
     runs-on: ubuntu-latest
@@ -34,6 +36,9 @@ jobs:
           java-version: '17'
           distribution: 'adopt'
           
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v4
+        
       - name: Build okhttp
         run: |
           cd "$GITHUB_WORKSPACE"
