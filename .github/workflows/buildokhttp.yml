@@ -1,48 +1,48 @@
-name: Build OKHTTP
-on:
-  push:
-    branches:
-      - master
-  pull_request:
-    types: [opened, labeled, unlabeled, synchronize]
-    
-permissions:
-  contents: read
+name: okhttp
 
-env:
-  GRADLE_OPTS: "-Dorg.gradle.jvmargs=-Xmx4g -Dorg.gradle.daemon=false -Dkotlin.incremental=false"
+on:
+  workflow_dispatch:
+    inputs:
+      ANDROID_NDK:
+        description: "ANDROID_NDK"
+        required: true
+        default: 'r26d'
+      ANDROID_ABI:
+        description: "ANDROID_ABI"
+        required: true
+        default: '21'
+      ENABLED_DECODERS:
+        description: "ENABLED_DECODERS"
+        required: true
+        default: 'vorbis opus flac alac pcm_mulaw pcm_alaw mp3 amrnb amrwb aac ac3 eac3 dca mlp truehd libarcdav3a'
+      FFMPEG_RELEASE_BRANCH:
+        description: "FFMPEG_RELEASE_BRANCH"
+        required: true
+        default: 'main'
 
 jobs:
-  Build_OKHTTP:
-    permissions:
-      checks: write # for actions/upload-artifact
+  okhttp:
     runs-on: ubuntu-latest
 
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
 
       - name: Set up JDK
         uses: actions/setup-java@v4
         with:
           java-version: '17'
-          distribution: 'zulu'
-
-      - name: Setup Gradle
-        uses: gradle/actions/setup-gradle@v4
-
-      - name: Build OKHTTP
+          distribution: 'adopt'
+          
+      - name: Build okhttp
         run: |
           cd "$GITHUB_WORKSPACE"
           git clone https://github.com/square/okhttp -b parent-4.1.0
-          cd okhttp 
+          cd okhttp
           ./gradlew build
-         
 
-      - name: Upload OKHTTP
+      - name: Upload okhttp
         uses: actions/upload-artifact@v4
         with:
-          name: OKHTTP
-          path: okhttp/*
+          name: okhttp
+          path: media/libraries/decoder_ffmpeg/*
