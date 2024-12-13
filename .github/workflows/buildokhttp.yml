@@ -24,9 +24,14 @@ env:
   
 jobs:
   okhttp:
+    permissions:
+     checks: write # for actions/upload-artifact
     runs-on: ubuntu-latest
 
-    steps:
+    steps:       
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v4
+        
       - name: Checkout repository
         uses: actions/checkout@v4
 
@@ -35,9 +40,7 @@ jobs:
         with:
           java-version: '17'
           distribution: 'adopt'
-          
-      - name: Setup Gradle
-        uses: gradle/actions/setup-gradle@v4
+
         
       - name: Build okhttp
         run: |
@@ -50,4 +53,4 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: okhttp
-          path: media/libraries/decoder_ffmpeg/*
+          path: okhttp/*
