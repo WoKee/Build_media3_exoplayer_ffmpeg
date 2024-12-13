@@ -1,72 +1,48 @@
-name: Build Media3 Exoplayer FFmpeg
-
+name: Build OKHTTP
 on:
-  workflow_dispatch:
-    inputs:
-      ANDROID_NDK:
-        description: "ANDROID_NDK"
-        required: true
-        default: 'r26d'
-      ANDROID_ABI:
-        description: "ANDROID_ABI"
-        required: true
-        default: '21'
-      ENABLED_DECODERS:
-        description: "ENABLED_DECODERS"
-        required: true
-        default: 'vorbis opus flac alac pcm_mulaw pcm_alaw mp3 amrnb amrwb aac ac3 eac3 dca mlp truehd libarcdav3a'
-      FFMPEG_RELEASE_BRANCH:
-        description: "FFMPEG_RELEASE_BRANCH"
-        required: true
-        default: 'main'
+  push:
+    branches:
+      - master
+  pull_request:
+    types: [opened, labeled, unlabeled, synchronize]
+    
+permissions:
+  contents: read
+
+env:
+  GRADLE_OPTS: "-Dorg.gradle.jvmargs=-Xmx4g -Dorg.gradle.daemon=false -Dkotlin.incremental=false"
 
 jobs:
-  Build-Media3-Exoplayer-FFmpeg:
+  Build_OKHTTP:
+    permissions:
+      checks: write # for actions/upload-artifact
     runs-on: ubuntu-latest
 
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - name: Set up JDK
         uses: actions/setup-java@v4
         with:
           java-version: '17'
-          distribution: 'adopt'
-          
-      - name: Set up Android NDK
+          distribution: 'zulu'
+
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v4
+
+      - name: Build OKHTTP
         run: |
           cd "$GITHUB_WORKSPACE"
-          wget https://dl.google.com/android/repository/android-ndk-${{ github.event.inputs.ANDROID_NDK }}-linux.zip
-          unzip android-ndk-${{ github.event.inputs.ANDROID_NDK }}-linux.zip &>/dev/null
-          rm -rf android-ndk-${{ github.event.inputs.ANDROID_NDK }}-linux.zip
+          git clone https://github.com/square/okhttp -b parent-4.1.0
+          cd okhttp 
+          ./gradlew build
+         
 
-      - name: Build Media3 Exoplayer FFmpeg
-        run: |
-          cd "$GITHUB_WORKSPACE"
-          git clone https://github.com/WoKee/media -b av3a_1.4.1.1
-          cd media
-          FFMPEG_MODULE_PATH="$(pwd)/libraries/decoder_ffmpeg/src/main"
-          NDK_PATH="$GITHUB_WORKSPACE"/android-ndk-${{ github.event.inputs.ANDROID_NDK }}
-          HOST_PLATFORM="linux-x86_64"
-          ANDROID_ABI=${{ github.event.inputs.ANDROID_ABI }}
-          ENABLED_DECODERS=(${{ github.event.inputs.ENABLED_DECODERS }})
-          cd libraries/decoder_ffmpeg && \
-          git clone https://github.com/WoKee/ffmpeg-av3a.git && \
-          chmod +x ./ffmpeg-av3a -R && \
-          mv ffmpeg-av3a ffmpeg && \
-          chmod +x ./ffmpeg -R && \
-          cd ffmpeg && \
-          git checkout main && \
-          FFMPEG_PATH="$(pwd)"
-          cd "${FFMPEG_MODULE_PATH}/jni" && \
-          ln -s "$FFMPEG_PATH" ffmpeg
-          cd "${FFMPEG_MODULE_PATH}/jni" && \
-          ./build_ffmpeg.sh \
-          "${FFMPEG_MODULE_PATH}" "${NDK_PATH}" "${HOST_PLATFORM}" "${ANDROID_ABI}" "${ENABLED_DECODERS[@]}"
-
-      - name: Upload Media3 Exoplayer FFmpeg
+      - name: Upload OKHTTP
         uses: actions/upload-artifact@v4
         with:
-          name: Media3 Exoplayer FFmpeg
-          path: media/libraries/decoder_ffmpeg/*
+          name: OKHTTP
+          path: okhttp/*
